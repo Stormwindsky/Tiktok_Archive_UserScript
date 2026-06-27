@@ -1,0 +1,116 @@
+// ==UserScript==
+// @name         TikTok Wayback & Archive.ph Helper
+// @namespace    https://github.com/Stormwindsky/Tiktok_Archive_UserScript
+// @version      1.0
+// @description  Cleans the Wayback Machine interface and integrates a TikTok archive.ph iframe
+// @author       Stormwindsky
+// @license      CC0 1.0 Universal
+// @match        *://*/*
+// @match        *://web.archive.org/web/*
+// @grant        none
+// @run-at       document-end
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    const currentUrl = window.location.href;
+    const defaultUsername = "Stormwindsky";
+
+    // ==========================================
+    // STEP 1: ADD GENERATOR BUTTON EVERYWHERE
+    // ==========================================
+    if (!currentUrl.includes('?=tiktok_archive')) {
+        const genBtn = document.createElement('button');
+        genBtn.innerText = "Generate TikTok Archive";
+        genBtn.style.position = "fixed";
+        genBtn.style.bottom = "20px";
+        genBtn.style.right = "20px";
+        genBtn.style.zIndex = "10000";
+        genBtn.style.padding = "10px 15px";
+        genBtn.style.backgroundColor = "#ff0050";
+        genBtn.style.color = "#fff";
+        genBtn.style.border = "none";
+        genBtn.style.borderRadius = "5px";
+        genBtn.style.cursor = "pointer";
+        genBtn.style.fontWeight = "bold";
+
+        genBtn.addEventListener('click', () => {
+            const username = prompt("Enter the TikTok username:", defaultUsername);
+            if (username) {
+                // Clean '@' prefix if typed by habit
+                const cleanUsername = username.replace('@', '');
+                const targetUrl = `https://web.archive.org/web/*/https://www.tiktok.com/@${cleanUsername}/video/*?=tiktok_archive`;
+                window.location.href = targetUrl;
+            }
+        });
+
+        document.body.appendChild(genBtn);
+    }
+
+    // ==========================================
+    // STEP 2: CLEAN INTERFACE & INJECT IFRAME
+    // ==========================================
+    if (currentUrl.includes('?=tiktok_archive')) {
+
+        // 1. Remove requested useless elements (Donation, search bars, toolbar options)
+        const selectorsToRemove = [
+            '#donation-link',
+            '.search-toolbar-logo-container',
+            '.search-text-container',
+            '.navbar-option' // Removes Calendar, Collections, Changes, Summary, etc.
+        ];
+
+        selectorsToRemove.forEach(selector => {
+            document.querySelectorAll(selector).forEach(el => el.remove());
+        });
+
+        // 2. Extract username from current URL, fallback to your default username
+        const match = currentUrl.match(/@([^/]+)/);
+        const username = match ? match[1] : defaultUsername;
+        const archivePhUrl = `https://archive.ph/https://www.tiktok.com/@${username}/video/*`;
+
+        // 3. Rebuild interface components (Blue button + Iframe)
+        const container = document.createElement('div');
+        container.style.margin = "30px auto";
+        container.style.maxWidth = "1200px";
+        container.style.padding = "0 20px";
+        container.style.fontFamily = "sans-serif";
+
+        // Create the blue link button
+        const blueBtn = document.createElement('a');
+        blueBtn.href = archivePhUrl;
+        blueBtn.target = "_blank";
+        blueBtn.innerText = "go 2 archive.today archive list";
+        blueBtn.style.display = "inline-block";
+        blueBtn.style.backgroundColor = "#007bff";
+        blueBtn.style.color = "#fff";
+        blueBtn.style.padding = "10px 20px";
+        blueBtn.style.textDecoration = "none";
+        blueBtn.style.fontWeight = "bold";
+        blueBtn.style.fontSize = "16px";
+        blueBtn.style.marginBottom = "15px";
+        blueBtn.style.borderRadius = "3px";
+
+        // Create the archive.ph iframe placeholder
+        const iframe = document.createElement('iframe');
+        iframe.src = archivePhUrl;
+        iframe.style.width = "450px";
+        iframe.style.height = "250px";
+        iframe.style.border = "2px solid #ccc";
+        iframe.style.display = "block";
+        iframe.style.backgroundColor = "#f8f9fa";
+
+        // Assemble components
+        container.appendChild(blueBtn);
+        container.appendChild(iframe);
+
+        // Append right below the URL results list layout
+        const mainTable = document.querySelector('#wbUrlLists') || document.querySelector('.search-results-container');
+        if (mainTable) {
+            mainTable.after(container);
+        } else {
+            document.body.appendChild(container);
+        }
+    }
+})();
