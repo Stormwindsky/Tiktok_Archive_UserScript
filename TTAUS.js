@@ -4,7 +4,7 @@
 // @version      1.0
 // @description  Cleans the Wayback Machine interface and integrates a TikTok archive.ph iframe
 // @author       Stormwindsky
-// @license      CC0 1.0 Universal
+// @license      MIT-0
 // @match        *://*/*
 // @match        *://web.archive.org/web/*
 // @grant        none
